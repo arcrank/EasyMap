@@ -6,6 +6,9 @@ This module is designed for rapid creation of simple HTML maps based off of scra
 It has the ability to generate coordinates for addresses and then plot them on map
 
 Currently you can use:
+
+run:
+    yelp-scrape.py
     
     url_make(item,location)
     get_data(urls)
