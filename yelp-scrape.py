@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 import folium
-
+import numpy as np
 #gmapkey = 'AIzaSyCVa0F3Q5sKoVEo-QitjTeAc3K-vbA9RqA'
 
 #gmaps = googlemaps.Client(key = gmapkey)
@@ -84,7 +84,7 @@ df = get_data(urls)
 
 
 
-def total_reivews(df):
+def total_reviews(df):
     '''Get total number of reviews made for results'''
     total_reviews = df['Reviews'].sum()
     return total_reviews
@@ -113,62 +113,65 @@ def top_neighborhood(df):
 
 
 #dataframe export
-nice_df = pd.DataFrame(columns =['Name','Address'])
-nice_df['Name'] = df[['Name']].copy()
-nice_df['geojson_s_address'] = df['Street address'].map(str)
-nice_df['geojson_c_address'] = df['City address'].map(str)
-nice_df['Address'] = df["Street address"].map(str)+" " + df["City address"]
+def geo_df_loader(df):
+    nice_df = pd.DataFrame(columns =['Name','geojson_s_address','geojson_c_address'])
+    nice_df['Name'] = df[['Name']].copy()
+    nice_df['geojson_s_address'] = df['Street address'].map(str)
+    nice_df['geojson_c_address'] = df['City address'].map(str)
+    return(nice_df)
 
 
-def get_geo(s_address,c_address):
+
+def get_geo(row):
+    s_address = row['Street address']#.map(str)
+    c_address = row['City address']#.map(str)
     street_buffer = s_address.split()
     street = '+'.join(street_buffer)
     city_buffer = c_address.split(',')[0].split()
     city = '+'+'+'.join(city_buffer)
     state_buffer = c_address.split(',')[-1].strip()
     state = '+'+str(state_buffer)
-    print(street, city,state)
+    #print(street, city,state)
     response = requests.get(str('https://maps.googleapis.com/maps/api/geocode/json?address='+street+','+city+','+state))
 
     resp_json_payload = response.json()
     try:
-        print(resp_json_payload['results'][0]['geometry']['location'])
+        #print(resp_json_payload['results'][0]['geometry']['location'])
         coordinate = resp_json_payload['results'][0]['geometry']['location']
         return(coordinate)
     except:
         return(None)
 
-print(nice_df.head())
+
 latitudes = []
 longitudes = []
+listcoords = []
 
+for index,row in df.iterrows():
 
-for index,row in nice_df.iterrows():
-    print(row['Name'])
+    #print(row['Street address'])
+    #print(row['City address'])
+    #print(get_geo(row))
     try:
-        temp = (get_geo(row['geojson_s_address'],row['geojson_c_address']))
+        temp = get_geo(row)
         latitudes.append(temp['lat'])
         longitudes.append(temp['lng'])
-        list.append(get_geo(row['geojson_s_address'],row['geojson_c_address']))
     except:
         pass
 
-print(list)
-print(latitudes)
-print(longitudes)
+
+
 
 def MapCreator(dataframe):
     pass
 
+#df['Coordinates'] = zip(latitudes,longitudes)
 m = folium.Map(location=[latitudes[0],longitudes[0]])
-
 tooltip = 'Click me!'
 for index,i in enumerate(latitudes):
-    popup_text = nice_df.loc[index]['Name']
+    popup_text = df.loc[index]['Name']
     popup_str = '<i>'+popup_text+'</i>'
     print(popup_str)
     folium.Marker([latitudes[index], longitudes[index]], popup=popup_str).add_to(m)
 m.save('index.html')
-
-
 
