@@ -79,8 +79,7 @@ def get_data(URLS):
     return df
 
 
-urls = url_make('coffee','New York')
-df = get_data(urls)
+
 
 
 
@@ -143,35 +142,40 @@ def get_geo(row):
         return(None)
 
 
-latitudes = []
-longitudes = []
-listcoords = []
-
-for index,row in df.iterrows():
-
-    #print(row['Street address'])
-    #print(row['City address'])
-    #print(get_geo(row))
-    try:
-        temp = get_geo(row)
-        latitudes.append(temp['lat'])
-        longitudes.append(temp['lng'])
-    except:
-        pass
 
 
 
 
-def MapCreator(dataframe):
-    pass
 
-#df['Coordinates'] = zip(latitudes,longitudes)
-m = folium.Map(location=[latitudes[0],longitudes[0]])
-tooltip = 'Click me!'
-for index,i in enumerate(latitudes):
-    popup_text = df.loc[index]['Name']
-    popup_str = '<i>'+popup_text+'</i>'
-    print(popup_str)
-    folium.Marker([latitudes[index], longitudes[index]], popup=popup_str).add_to(m)
-m.save('index.html')
 
+
+def MapCreator(latitudes,longitudes,df):
+    m = folium.Map(location=[latitudes[0],longitudes[0]])
+    tooltip = 'Click me!'
+    for index,i in enumerate(latitudes):
+        popup_text = df.loc[index]['Name']
+        popup_str = '<i>'+popup_text+'</i>'
+        print(popup_str)
+        if i != -1:
+            folium.Marker([latitudes[index], longitudes[index]], popup=popup_str).add_to(m)
+    m.save('index.html')
+
+if __name__ == "__main__":
+    urls = url_make('coffee','Baltimore')
+    df = get_data(urls)
+    latitudes = []
+    longitudes = []
+    listcoords = []
+    for index, row in df.iterrows():
+
+        # print(row['Street address'])
+        # print(row['City address'])
+        # print(get_geo(row))
+        try:
+            temp = get_geo(row)
+            latitudes.append(temp['lat'])
+            longitudes.append(temp['lng'])
+        except:
+            latitudes.append(-1)
+            longitudes.append(-1)
+    MapCreator(latitudes,longitudes,df)
